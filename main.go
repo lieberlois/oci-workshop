@@ -10,6 +10,9 @@ import (
 func main() {
 	// TODO: Load Plugin File from OCI, either via Oras Lib or CLI
 	decoderFunc, err := loadDecoderFuncFromPlugin("out/base64.so")
+
+	// PluginLoader Interface -> either OCI or ... ? Maybe local FS?
+
 	if err != nil {
 		panic(err)
 	}

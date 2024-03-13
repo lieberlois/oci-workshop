@@ -4,3 +4,7 @@ out/base64.so: decoders/base64/decoder.go
 
 .PHONY: build
 build: out/base64.so
+
+.PHONY: decode
+decode: build
+	@go run main.go		
