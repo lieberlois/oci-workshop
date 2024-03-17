@@ -7,19 +7,20 @@ import (
 )
 
 func main() {
-	var reader io.Reader
 	// pluginResolver := &resolver.FSPluginResolver{}
 	// plugins := []string{"./out/base64.so"}
 
-	ociResolverConfig := resolver.OCIResolverConfig{
-		Hostname:  "localhost",
-		Port:      "8080",
-		PluginDir: "./plugins",
-	}
-	pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(ociResolverConfig)
+	pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
+		resolver.WithHostname("localhost"),
+		resolver.WithPort("8080"),
+		resolver.WithPluginDir("./plugins"),
+	)
 	defer cleanupFunc()
 
 	plugins := []string{"base64:v0.0.1"}
+
+	// Reader variable for plugin chain
+	var reader io.Reader
 
 	// Initialize with file
 	reader, err := os.Open("super-secret.txt")

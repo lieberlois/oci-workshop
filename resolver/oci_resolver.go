@@ -21,16 +21,38 @@ type OCIResolverConfig struct {
 }
 
 type OCIPluginResolver struct {
-	OCIResolverConfig
+	config OCIResolverConfig
 }
 
-func NewOCIPluginResolver(config OCIResolverConfig) (*OCIPluginResolver, func()) {
-	r := &OCIPluginResolver{
-		OCIResolverConfig: config,
+type Option func(*OCIResolverConfig)
+
+func WithHostname(hostname string) Option {
+	return func(opts *OCIResolverConfig) {
+		opts.Hostname = hostname
+	}
+}
+
+func WithPort(port string) Option {
+	return func(opts *OCIResolverConfig) {
+		opts.Port = port
+	}
+}
+
+func WithPluginDir(pluginDir string) Option {
+	return func(opts *OCIResolverConfig) {
+		opts.PluginDir = pluginDir
+	}
+}
+
+func NewOCIPluginResolver(options ...Option) (*OCIPluginResolver, func()) {
+	r := &OCIPluginResolver{}
+
+	for _, opt := range options {
+		opt(&r.config)
 	}
 
 	cleanupFunc := func() {
-		err := os.RemoveAll(r.OCIResolverConfig.PluginDir)
+		err := os.RemoveAll(r.config.PluginDir)
 		if err != nil {
 			log.Fatalf("Failed to cleanup OCI plugins directory: %s", err)
 		}
@@ -44,19 +66,24 @@ func (r OCIPluginResolver) Resolve(name string) (types.DecoderFunc, error) {
 	repoName := nameSplit[0]
 	tag := nameSplit[1]
 
-	util.DPrintf("OCIPluginResolver: Pulling %s from registry %s:%s...", name, r.Hostname, r.Port)
+	util.DPrintf(
+		"OCIPluginResolver: Pulling %s from registry %s:%s...",
+		name,
+		r.config.Hostname,
+		r.config.Port,
+	)
 	err := r.pullOciArtifact(repoName, tag)
 
 	if err != nil {
 		return nil, err
 	}
 
-	pluginPath := fmt.Sprintf("%s/%s.so", r.PluginDir, repoName)
+	pluginPath := fmt.Sprintf("%s/%s.so", r.config.PluginDir, repoName)
 	return loadDecoderFuncFromPlugin(pluginPath)
 }
 
 func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
-	fileStore, err := file.New(r.PluginDir)
+	fileStore, err := file.New(r.config.PluginDir)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +91,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 
 	ctx := context.Background()
 
-	artifactRef := fmt.Sprintf("%s:%s/%s", r.Hostname, r.Port, name)
+	artifactRef := fmt.Sprintf("%s:%s/%s", r.config.Hostname, r.config.Port, name)
 
 	repo, err := remote.NewRepository(artifactRef)
 	if err != nil {
