@@ -1,3 +1,4 @@
 waaf
 out
+plugins
 **/*.so

@@ -1,52 +1,43 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"plugin"
+	"workshop/resolver"
 )
 
 func main() {
-	// TODO: Load Plugin File from OCI, either via Oras Lib or CLI
-	decoderFunc, err := loadDecoderFuncFromPlugin("out/base64.so")
+	var reader io.Reader
+	// pluginResolver := &resolver.FSPluginResolver{}
+	// plugins := []string{"./out/base64.so"}
 
-	// PluginLoader Interface -> either OCI or ... ? Maybe local FS?
-
-	if err != nil {
-		panic(err)
+	ociResolverConfig := resolver.OCIResolverConfig{
+		Hostname:  "localhost",
+		Port:      "8080",
+		PluginDir: "./plugins",
 	}
+	pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(ociResolverConfig)
+	defer cleanupFunc()
 
-	// str := "SGVsbG8gd29ybGQK"
-	// reader := strings.NewReader(str)
+	plugins := []string{"base64:v0.0.1"}
+
+	// Initialize with file
 	reader, err := os.Open("super-secret.txt")
 	if err != nil {
 		panic(err)
 	}
 
-	result := decoderFunc(reader)
+	for _, plugin := range plugins {
+		decoderFunc, err := pluginResolver.Resolve(plugin)
+		if err != nil {
+			panic(err)
+		}
 
-	_, err = io.Copy(os.Stdout, result)
+		reader = decoderFunc(reader)
+	}
+
+	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func loadDecoderFuncFromPlugin(path string) (func(io.Reader) io.Reader, error) {
-	plug, err := plugin.Open(path)
-	if err != nil {
-		panic(err)
-	}
-
-	symDecoderFunc, err := plug.Lookup("Decode")
-	if err != nil {
-		panic(err)
-	}
-
-	decoderFunc, ok := symDecoderFunc.(func(io.Reader) io.Reader)
-	if !ok {
-		fmt.Println("Unexpected type from module symbol")
-		os.Exit(1)
-	}
-	return decoderFunc, err
 }
