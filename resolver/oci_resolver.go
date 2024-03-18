@@ -11,6 +11,7 @@ import (
 
 	oras "oras.land/oras-go/v2"
 	"oras.land/oras-go/v2/content/file"
+	"oras.land/oras-go/v2/registry"
 	"oras.land/oras-go/v2/registry/remote"
 )
 
@@ -78,19 +79,20 @@ func (r OCIPluginResolver) Resolve(name string) (types.DecoderFunc, error) {
 		return nil, err
 	}
 
-	pluginPath := fmt.Sprintf("%s/%s.so", r.config.PluginDir, repoName)
+	pluginPath := fmt.Sprintf("%s/%s/%s", r.config.PluginDir, repoName, "decoder.so")
 	return loadDecoderFuncFromPlugin(pluginPath)
 }
 
 func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
-	fileStore, err := file.New(r.config.PluginDir)
+	fileStore, err := file.New(r.config.PluginDir + "/" + name) // note: folder per plugin for sbom etc.
 	if err != nil {
 		panic(err)
 	}
 	defer fileStore.Close()
 
-	ctx := context.Background()
+	ctx := context.Background() // TODO: move to central Context
 
+	// Build Aritfact Ref: hostname:port/repo
 	artifactRef := fmt.Sprintf("%s:%s/%s", r.config.Hostname, r.config.Port, name)
 
 	repo, err := remote.NewRepository(artifactRef)
@@ -99,9 +101,27 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 	}
 
 	repo.PlainHTTP = true
-	_, err = oras.Copy(ctx, repo, tag, fileStore, tag, oras.DefaultCopyOptions)
+
+	// Fetch OCI artifact
+	manifestDescriptor, err := oras.Copy(ctx, repo, tag, fileStore, tag, oras.DefaultCopyOptions)
 	if err != nil {
 		return err
+	}
+
+	// Get artifacts with subject pointing to main artifact
+	refs, err := registry.Referrers(ctx, repo, manifestDescriptor, "goplugin/sbom")
+	if err != nil {
+		panic(err)
+	}
+
+	// Downloads all attached SBOM artifacts
+	for _, ref := range refs {
+		util.DPrintf("Resolving SBOM ref %s...", ref)
+
+		_, err := oras.Copy(ctx, repo, ref.Digest.String(), fileStore, "", oras.DefaultCopyOptions)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return nil

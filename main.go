@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// pluginResolver := &resolver.FSPluginResolver{}
-	// plugins := []string{"./out/base64.so"}
+	// plugins := []string{"./out/base64/decoder.so"}
 
 	pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
 		resolver.WithHostname("localhost"),
@@ -16,7 +16,6 @@ func main() {
 		resolver.WithPluginDir("./plugins"),
 	)
 	defer cleanupFunc()
-
 	plugins := []string{"base64:v0.0.1"}
 
 	// Reader variable for plugin chain
