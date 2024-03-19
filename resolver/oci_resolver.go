@@ -16,9 +16,10 @@ import (
 )
 
 type OCIResolverConfig struct {
-	Hostname  string
-	Port      string
-	PluginDir string
+	Hostname     string
+	Port         string
+	PluginDir    string
+	ValidateSbom bool
 }
 
 type OCIPluginResolver struct {
@@ -42,6 +43,12 @@ func WithPort(port string) Option {
 func WithPluginDir(pluginDir string) Option {
 	return func(opts *OCIResolverConfig) {
 		opts.PluginDir = pluginDir
+	}
+}
+
+func WithValidateSbom(validateSbom bool) Option {
+	return func(opts *OCIResolverConfig) {
+		opts.ValidateSbom = validateSbom
 	}
 }
 
@@ -79,14 +86,29 @@ func (r OCIPluginResolver) Resolve(name string) (types.DecoderFunc, error) {
 		return nil, err
 	}
 
-	pluginPath := fmt.Sprintf("%s/%s/%s", r.config.PluginDir, repoName, "decoder.so")
+	artifactFolderPath := fmt.Sprintf("%s/%s", r.config.PluginDir, repoName)
+	pluginPath := fmt.Sprintf("%s/decoder.so", artifactFolderPath)
+	sbomPath := fmt.Sprintf("%s/sbom.json", artifactFolderPath)
+
+	if r.config.ValidateSbom {
+		file, err := os.Open(sbomPath)
+		if err != nil {
+			return nil, err
+		}
+
+		err = validateSbom(file)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return loadDecoderFuncFromPlugin(pluginPath)
 }
 
 func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 	fileStore, err := file.New(r.config.PluginDir + "/" + name) // note: folder per plugin for sbom etc.
 	if err != nil {
-		panic(err)
+		panic(err) // todo: dont panic
 	}
 	defer fileStore.Close()
 
@@ -116,7 +138,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 
 	// Downloads all attached SBOM artifacts
 	for _, ref := range refs {
-		util.DPrintf("Resolving SBOM ref %s...", ref)
+		util.DPrintf("Resolving SBOM ref %s...", ref.Digest)
 
 		_, err := oras.Copy(ctx, repo, ref.Digest.String(), fileStore, "", oras.DefaultCopyOptions)
 		if err != nil {

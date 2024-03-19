@@ -1,10 +1,14 @@
 package resolver
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"plugin"
 	"workshop/types"
+	"workshop/util"
+
+	cdx "github.com/CycloneDX/cyclonedx-go"
 )
 
 type PluginResolver interface {
@@ -28,4 +32,20 @@ func loadDecoderFuncFromPlugin(filepath string) (types.DecoderFunc, error) {
 	}
 
 	return decoderFunc, nil
+}
+
+func validateSbom(reader io.Reader) error {
+	bom := cdx.BOM{}
+	decoder := cdx.NewBOMDecoder(reader, cdx.BOMFileFormatJSON)
+	if err := decoder.Decode(&bom); err != nil {
+		return err
+	}
+
+	if len(*bom.Components) > 0 {
+		return fmt.Errorf("expected no external dependencies, found %d", len(*bom.Components))
+	}
+
+	util.DPrintf("no external dependencies detected")
+
+	return nil
 }
