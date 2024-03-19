@@ -6,10 +6,14 @@ import (
 	"testing"
 )
 
-func TestDecodeBase64(t *testing.T) {
+func TestDecodeJson(t *testing.T) {
 	// Arrange
-	reader := strings.NewReader("SGVsbG8gd29ybGQK")
-	expected := "Hello world\n"
+	reader := strings.NewReader(`
+	{
+		"value": "test"
+	}
+	`)
+	expected := "test"
 
 	// Act
 	decoded := Decode(reader)
