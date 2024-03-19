@@ -9,17 +9,17 @@ import (
 func main() {
 	sbomValidation := true
 
-	// pluginResolver := resolver.NewFSPluginResolver(sbomValidation)
-	// plugins := []string{"./out/json", "./out/base64"}
+	pluginResolver := resolver.NewFSPluginResolver(sbomValidation)
+	plugins := []string{"./out/json", "./out/reverse", "./out/base64"}
 
-	pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
-		resolver.WithHostname("localhost"),
-		resolver.WithPort("8080"),
-		resolver.WithPluginDir("./plugins"),
-		resolver.WithValidateSbom(sbomValidation),
-	)
-	defer cleanupFunc()
-	plugins := []string{"json:v0.0.1", "base64:v0.0.1"}
+	// pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
+	// 	resolver.WithHostname("localhost"),
+	// 	resolver.WithPort("8080"),
+	// 	resolver.WithPluginDir("./plugins"),
+	// 	resolver.WithValidateSbom(sbomValidation),
+	// )
+	// defer cleanupFunc()
+	// plugins := []string{"json:v0.0.1", "reverse:v0.0.1", "base64:v0.0.1"}
 
 	// Reader variable for plugin chain
 	var reader io.Reader
