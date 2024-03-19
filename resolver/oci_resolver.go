@@ -108,7 +108,7 @@ func (r OCIPluginResolver) Resolve(name string) (types.DecoderFunc, error) {
 func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 	fileStore, err := file.New(r.config.PluginDir + "/" + name) // note: folder per plugin for sbom etc.
 	if err != nil {
-		panic(err) // todo: dont panic
+		return err
 	}
 	defer fileStore.Close()
 
