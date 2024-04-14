@@ -3,7 +3,7 @@ build: out/base64/decoder.so out/base64/sbom.json out/hex/decoder.so out/hex/sbo
 
 out/base64/decoder.so: decoders/base64/decoder.go
 	@echo "Building Base64 Decoder..."
-	@go build -buildmode=plugin -o out/base64/decoder.so decoders/base64/decoder.go
+	@CGO_ENABLED=1 go build -buildmode=plugin -o out/base64/decoder.so decoders/base64/decoder.go
 
 out/base64/sbom.json: decoders/base64/decoder.go
 	@echo "Generating SBOM..."
@@ -11,7 +11,7 @@ out/base64/sbom.json: decoders/base64/decoder.go
 
 out/hex/decoder.so: decoders/hex/decoder.go
 	@echo "Building Hex Decoder..."
-	@go build -buildmode=plugin -o out/hex/decoder.so decoders/hex/decoder.go
+	@CGO_ENABLED=1 go build -buildmode=plugin -o out/hex/decoder.so decoders/hex/decoder.go
 
 out/hex/sbom.json: decoders/hex/decoder.go
 	@echo "Generating SBOM..."
@@ -19,7 +19,7 @@ out/hex/sbom.json: decoders/hex/decoder.go
 
 out/json/decoder.so: decoders/json/decoder.go
 	@echo "Building JSON Decoder..."
-	@go build -buildmode=plugin -o out/json/decoder.so decoders/json/decoder.go
+	@CGO_ENABLED=1 go build -buildmode=plugin -o out/json/decoder.so decoders/json/decoder.go
 
 out/json/sbom.json: decoders/json/decoder.go
 	@echo "Generating SBOM..."
@@ -27,7 +27,7 @@ out/json/sbom.json: decoders/json/decoder.go
 
 out/reverse/decoder.so: decoders/reverse/decoder.go
 	@echo "Building Reverse Decoder..."
-	@go build -buildmode=plugin -o out/reverse/decoder.so decoders/reverse/decoder.go
+	@CGO_ENABLED=1 go build -buildmode=plugin -o out/reverse/decoder.so decoders/reverse/decoder.go
 
 out/reverse/sbom.json: decoders/reverse/decoder.go
 	@echo "Generating SBOM..."
