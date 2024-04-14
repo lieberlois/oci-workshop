@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrExternalDependencies = errors.New("detected external dependencies")
+	ErrExternalDependencies = errors.New("detected external dependencies in SBOM")
 )
 
 func validateSbom(reader io.Reader) error {
