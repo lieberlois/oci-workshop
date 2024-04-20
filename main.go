@@ -7,14 +7,16 @@ import (
 )
 
 func main() {
-	sbomValidation := true
+	sbomValidation := false
+
+	// Bash: cat super-secret.json | jq -r '.value' | xxd -r -p | rev | base64 -d
 
 	pluginResolver := resolver.NewFSPluginResolver(sbomValidation)
 	plugins := []string{"./out/json", "./out/hex", "./out/reverse", "./out/base64"}
 
 	// pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
 	// 	resolver.WithHostname("localhost"),
-	// 	resolver.WithPort("8080"),
+	// 	resolver.WithPort("5000"),
 	// 	resolver.WithPluginDir("./plugins"),
 	// 	resolver.WithValidateSbom(sbomValidation),
 	// )

@@ -2,3 +2,4 @@ waaf
 out
 plugins
 **/*.so
+**/.DS_Store
