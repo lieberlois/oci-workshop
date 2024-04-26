@@ -29,6 +29,11 @@ oras pull localhost:8080/base64:v0.0.1
 # For Gitea:
 oras login 128.140.45.106:3000 --username luis.schweigard@gmail.com --password password123 --plain-http
 export OCI_REGISTRY=128.140.45.106:3000/lieberlois/ocitest
-
 # ---> Also adjust the artifact names in the code e.g. from json:v0.0.1 to lieberlois/ocitest/json:v0.0.1
+
+# For ACR:
+export OCI_REGISTRY=<acrname.azurecr.io>
+oras login $OCI_REGISTRY --username <acrname> --password <password>
+docker login $OCI_REGISTRY
+
 ```

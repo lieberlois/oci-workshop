@@ -15,8 +15,10 @@ func main() {
 	plugins := []string{"./out/json", "./out/hex", "./out/reverse", "./out/base64"}
 
 	// pluginResolver, cleanupFunc := resolver.NewOCIPluginResolver(
-	// 	resolver.WithHostname("localhost"),
-	// 	resolver.WithPort("5000"),
+	// 	resolver.WithHostname("ociworkshopacr.azurecr.io"),
+	// 	// resolver.WithPort(":5000"),
+	// 	// resolver.WithInsecure(),
+	// 	resolver.WithPort(""),
 	// 	resolver.WithPluginDir("./plugins"),
 	// 	resolver.WithValidateSbom(sbomValidation),
 	// )

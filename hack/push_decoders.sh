@@ -5,10 +5,20 @@ if [[ -z "$OCI_REGISTRY" ]]; then
     exit 1
 fi
 
+http_option=""
+if [[ "$OCI_REGISTRY" != *azurecr.io ]]; then
+    http_option="--plain-http"
+fi
+
 for dir in out/*; do
     plugin_name="$(echo $dir | sed 's/out\///g')"
     (cd $dir && oras push \
-        --plain-http "${OCI_REGISTRY}/${plugin_name}:v0.0.1" \
+        ${http_option} \
+        "${OCI_REGISTRY}/${plugin_name}:v0.0.1" \
         --artifact-type application/vnd.oci.plugin.golang.so \
         decoder.so:goplugin/so)
 done
+
+
+
+oras push "${OCI_REGISTRY}/base64:v0.0.1" --artifact-type application/vnd.oci.plugin.golang.so decoder.so:goplugin/so

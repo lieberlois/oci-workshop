@@ -13,6 +13,9 @@ import (
 	"oras.land/oras-go/v2/content/file"
 	"oras.land/oras-go/v2/registry"
 	"oras.land/oras-go/v2/registry/remote"
+	"oras.land/oras-go/v2/registry/remote/auth"
+	"oras.land/oras-go/v2/registry/remote/credentials"
+	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
 type OCIResolverConfig struct {
@@ -20,6 +23,7 @@ type OCIResolverConfig struct {
 	Port         string
 	PluginDir    string
 	ValidateSbom bool
+	Insecure     bool
 }
 
 type OCIPluginResolver struct {
@@ -52,6 +56,12 @@ func WithValidateSbom(validateSbom bool) Option {
 	}
 }
 
+func WithInsecure() Option {
+	return func(opts *OCIResolverConfig) {
+		opts.Insecure = true
+	}
+}
+
 func NewOCIPluginResolver(options ...Option) (*OCIPluginResolver, func()) {
 	r := &OCIPluginResolver{}
 
@@ -75,7 +85,7 @@ func (r OCIPluginResolver) Resolve(name string) (types.DecoderFunc, error) {
 	tag := nameSplit[1]
 
 	util.DPrintf(
-		"OCIPluginResolver: Pulling %s from registry %s:%s...",
+		"OCIPluginResolver: Pulling %s from registry %s%s...",
 		name,
 		r.config.Hostname,
 		r.config.Port,
@@ -115,14 +125,29 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 	ctx := context.Background() // TODO: move to central Context
 
 	// Build Aritfact Ref: hostname:port/repo
-	artifactRef := fmt.Sprintf("%s:%s/%s", r.config.Hostname, r.config.Port, name)
+	artifactRef := fmt.Sprintf("%s%s/%s", r.config.Hostname, r.config.Port, name)
 
 	repo, err := remote.NewRepository(artifactRef)
 	if err != nil {
 		panic(err)
 	}
 
-	repo.PlainHTTP = true
+	if r.config.Insecure {
+		repo.PlainHTTP = true
+	} else {
+		// Use Docker Client Credentials
+		storeOpts := credentials.StoreOptions{}
+		credStore, err := credentials.NewStoreFromDocker(storeOpts)
+		if err != nil {
+			panic(err)
+		}
+		repo.Client = &auth.Client{
+			Client:     retry.DefaultClient,
+			Cache:      auth.NewCache(),
+			Credential: credentials.Credential(credStore),
+		}
+
+	}
 
 	// Fetch OCI artifact
 	manifestDescriptor, err := oras.Copy(ctx, repo, tag, fileStore, tag, oras.DefaultCopyOptions)
