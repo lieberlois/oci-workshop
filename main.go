@@ -2,11 +2,12 @@ package main
 
 import (
 	"io"
+	"log"
 	"os"
 	"workshop/resolver"
 )
 
-func main() {
+func run() error {
 	sbomValidation := false
 
 	// Bash: cat super-secret.json | jq -r '.value' | xxd -r -p | rev | base64 -d
@@ -31,13 +32,13 @@ func main() {
 	// Initialize with file
 	reader, err := os.Open("super-secret.json")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, plugin := range plugins {
 		decoderFunc, err := pluginResolver.Resolve(plugin)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		reader = decoderFunc(reader)
@@ -45,6 +46,14 @@ func main() {
 
 	_, err = io.Copy(os.Stdout, reader)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
 	}
 }

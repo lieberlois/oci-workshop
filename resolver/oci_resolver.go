@@ -129,7 +129,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 
 	repo, err := remote.NewRepository(artifactRef)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if r.config.Insecure {
@@ -139,7 +139,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 		storeOpts := credentials.StoreOptions{}
 		credStore, err := credentials.NewStoreFromDocker(storeOpts)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		repo.Client = &auth.Client{
 			Client:     retry.DefaultClient,
@@ -158,7 +158,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 	// Get artifacts with subject pointing to main artifact
 	refs, err := registry.Referrers(ctx, repo, manifestDescriptor, "goplugin/sbom")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Downloads all attached SBOM artifacts
@@ -167,7 +167,7 @@ func (r OCIPluginResolver) pullOciArtifact(name string, tag string) error {
 
 		_, err := oras.Copy(ctx, repo, ref.Digest.String(), fileStore, "", oras.DefaultCopyOptions)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
