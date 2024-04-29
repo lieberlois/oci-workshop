@@ -126,7 +126,7 @@ version="v0.0.1"
 oras push \
 	"${OCI_REGISTRY}/${plugin_name}:${version}" \
 	--artifact-type application/vnd.oci.plugin.golang.so \
-	decoder.so:goplugin/so
+	out/${plugin_name}/decoder.so:goplugin/so
 
 
 # Verify that everything worked
@@ -158,7 +158,7 @@ version="v0.0.1"
 
 oras attach \
 	"${OCI_REGISTRY}/${plugin_name}:${version}" \
-	./sbom.json \
+	"out/${plugin_name}/sbom.json" \
 	--artifact-type goplugin/sbom
 ```
 
