@@ -67,9 +67,21 @@ go mod init decoder
 
 ### Team Base64
 
+Your team is responsible for the base64 decoder. The decoder accepts a reader that will contain a base64 encoded string.
+
+It is your job to fill in the function `Decode(reader io.Reader) io.Reader`. Your function should in this case return an `io.Reader` containing the base64 decoded data.
+
 ### Team Hex
 
+Your team is responsible for the hex decoder. The decoder accepts a reader that will contain a hex encoded string.
+
+It is your job to fill in the function `Decode(reader io.Reader) io.Reader`. Your function should in this case return an `io.Reader` containing the hex decoded data.
+
 ### Team Reverse
+
+Your team is responsible for the reverse decoder. The decoder accepts a reader that will contain a string.
+
+It is your job to fill in the function `Decode(reader io.Reader) io.Reader`. Your function should in this case return an `io.Reader` containing the same string but reversed.
 
 ### Team JSON
 
